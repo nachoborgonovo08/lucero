@@ -109,7 +109,7 @@ export default async function AdminPage() {
                       <button className="btn btn-ghost btn-sm">+14 días</button>
                     </form>
                     {u.plan_source !== "mp" && (
-                      <form action={setManualPlan} className="flex gap-1">
+                      <form action={setManualPlan} className="flex gap-1" key={`${u.plan}-${u.manual_until?.getTime() ?? 0}`}>
                         <input type="hidden" name="id" value={u.id} />
                         <select name="plan" defaultValue={u.plan} className="input !w-auto !py-1 text-xs" aria-label="Plan manual">
                           <option value="trial">trial</option>
@@ -117,7 +117,8 @@ export default async function AdminPage() {
                           <option value="pro">pro</option>
                           <option value="agencia">agencia</option>
                         </select>
-                        <button className="btn btn-ghost btn-sm" title="Con un plan pago suma un mes desde el vencimiento; con trial lo quita">+1 mes</button>
+                        <button name="months" value="1" className="btn btn-ghost btn-sm" title="Con un plan pago suma un mes desde el vencimiento; con trial lo quita">+1 mes</button>
+                        <button name="months" value="12" className="btn btn-ghost btn-sm" title="Pago anual: suma 12 meses">+12</button>
                       </form>
                     )}
                   </div>

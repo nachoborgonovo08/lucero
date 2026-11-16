@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { BRAND } from "@/lib/config";
+import { BRAND, supportLink } from "@/lib/config";
+import { NICHES } from "@/lib/content";
 import { Logo } from "./brand";
 
 export function SiteHeader() {
@@ -11,6 +12,7 @@ export function SiteHeader() {
           <Link className="hover:text-ink" href="/#como-funciona">Cómo funciona</Link>
           <Link className="hover:text-ink" href="/#precios">Precios</Link>
           <Link className="hover:text-ink" href="/calculadora">Calculadora de reseñas</Link>
+          <Link className="hover:text-ink" href="/guias">Guías</Link>
         </nav>
         <div className="flex items-center gap-2">
           <Link className="btn btn-sm text-ink hover:bg-white" href="/login">Entrar</Link>
@@ -24,9 +26,17 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="border-t border-line">
+      <div className="mx-auto max-w-6xl px-4 pt-8 text-sm text-muted">
+        <span className="mr-3 font-medium text-ink">{BRAND} para:</span>
+        {NICHES.map((n) => (
+          <Link key={n.slug} className="mr-4 inline-block first-letter:uppercase hover:text-ink" href={`/para/${n.slug}`}>{n.name}</Link>
+        ))}
+      </div>
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-8 text-sm text-muted">
         <p>© {new Date().getFullYear()} {BRAND}. Hecho para negocios locales.</p>
-        <nav className="flex gap-5">
+        <nav className="flex flex-wrap gap-5">
+          {supportLink() && <a className="hover:text-ink" href={supportLink()!} target="_blank" rel="noopener">Hablar por WhatsApp</a>}
+          <Link className="hover:text-ink" href="/guias">Guías</Link>
           <Link className="hover:text-ink" href="/calculadora">Calculadora</Link>
           <Link className="hover:text-ink" href="/terminos">Términos</Link>
           <Link className="hover:text-ink" href="/privacidad">Privacidad</Link>

@@ -67,6 +67,15 @@ try {
   assert.match(await page.textContent("[aria-live]"), /47/); // 37 × (4,6 − 4,1) ÷ 0,4 = 46,25 → 47
   ok("calculadora: 4,1 con 37 reseñas → 47 para llegar a 4,6");
 
+  for (const path of ["/guias", "/guias/como-responder-resenas-negativas", "/para/restaurantes-y-cafeterias", "/sitemap.xml"]) {
+    assert.equal((await fetch(BASE + path)).status, 200, path);
+  }
+  assert.equal((await fetch(`${BASE}/para/rubro-inventado`)).status, 404);
+  await page.goto(`${BASE}/para/peluquerias-y-barberias`);
+  assert.match(await page.textContent("h1"), /peluquería o barbería/);
+  if (shots) await page.screenshot({ path: `${shots}/rubro.png`, fullPage: true });
+  ok("guías y páginas por rubro publicadas y en el sitemap");
+
   await page.goto(`${BASE}/app`);
   await page.waitForURL("**/login");
   ok("/app sin sesión redirige a /login");
@@ -267,6 +276,10 @@ try {
   await page.waitForTimeout(800);
   const [caro] = await sql`select plan, plan_source, manual_until > now() + interval '27 days' as month from users where email = 'caro@test.local'`;
   assert.deepEqual([caro.plan, caro.plan_source, caro.month], ["esencial", "manual", true]);
+  await page.locator("tr:has-text('caro@test.local') button:has-text('+12')").click();
+  await page.waitForTimeout(800);
+  assert.ok((await sql`select manual_until > now() + interval '12 months 27 days' as y from users where email = 'caro@test.local'`)[0].y);
+  await sql`update users set manual_until = now() + interval '1 month' where email = 'caro@test.local'`;
   await pc.goto(`${BASE}/app/plan`);
   await pc.waitForSelector("text=Tenés el plan Esencial activo hasta el");
   await pc.waitForSelector("text=lucero.test.alias");

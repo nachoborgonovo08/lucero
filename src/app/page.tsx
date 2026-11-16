@@ -2,6 +2,7 @@ import Link from "next/link";
 import { StarIcon, Stars } from "@/components/brand";
 import { SiteFooter, SiteHeader } from "@/components/site";
 import { BRAND, formatPrice, PLANS, TRIAL_DAYS, transferEnabled } from "@/lib/config";
+import { NICHES } from "@/lib/content";
 import { mpConfigured } from "@/lib/mp";
 
 const STEPS = [
@@ -111,6 +112,19 @@ export default function Landing() {
                 <h3 className="font-semibold">{f.t}</h3>
                 <p className="mt-1.5 text-muted">{f.d}</p>
               </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Rubros */}
+        <section className="mx-auto max-w-6xl px-4 pb-20">
+          <h2 className="text-3xl font-semibold tracking-tight">Pensado para tu rubro</h2>
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {NICHES.map((n) => (
+              <Link key={n.slug} href={`/para/${n.slug}`} className="card !p-5 transition hover:border-ink">
+                <span className="block font-semibold first-letter:uppercase">{n.name}</span>
+                <span className="mt-1 block text-sm text-muted">Ver cómo se usa →</span>
+              </Link>
             ))}
           </div>
         </section>

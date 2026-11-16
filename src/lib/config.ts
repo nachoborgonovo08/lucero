@@ -105,6 +105,15 @@ export const TRANSFER = {
 };
 export const transferEnabled = () => Boolean(TRANSFER.alias);
 
+/** WhatsApp de soporte (SUPPORT_WHATSAPP, o el mismo que recibe los comprobantes). */
+export function supportLink(text = "Hola! Tengo una consulta sobre Lucero.") {
+  const n = (process.env.SUPPORT_WHATSAPP ?? "").replace(/\D/g, "") || TRANSFER.whatsapp;
+  return n ? `https://wa.me/${n}?text=${encodeURIComponent(text)}` : null;
+}
+
+/** Pago anual por transferencia: se cobran 10 meses y se dan 12. */
+export const ANNUAL_MONTHS_CHARGED = 10;
+
 export const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
   .split(",")
   .map((e) => e.trim().toLowerCase())

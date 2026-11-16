@@ -4,7 +4,7 @@ import { ActionForm, Submit } from "@/components/form";
 import { hasAccess, planExpired, requireUser, trialDaysLeft } from "@/lib/auth";
 import { syncPreapproval } from "@/lib/billing";
 import { CopyButton } from "@/components/form";
-import { formatPrice, type PlanId, PLANS, TRANSFER, transferEnabled } from "@/lib/config";
+import { ANNUAL_MONTHS_CHARGED, formatPrice, type PlanId, PLANS, TRANSFER, transferEnabled } from "@/lib/config";
 import { sql } from "@/lib/db";
 import { getPreapproval, mpConfigured, parseExternalRef } from "@/lib/mp";
 import { waLink } from "@/lib/phone";
@@ -70,6 +70,10 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
             </div>
             <CopyButton text={TRANSFER.alias} label="Copiar alias" />
           </div>
+          <p className="mt-3 text-sm">
+            <b>Pagando el año entero tenés 2 meses gratis:</b>{" "}
+            {Object.values(PLANS).map((p) => `${p.name} ${formatPrice(p.price * ANNUAL_MONTHS_CHARGED)}`).join(" · ")}.
+          </p>
           {!TRANSFER.whatsapp && <p className="hint">Respondé el email de bienvenida con el comprobante.</p>}
         </section>
       )}

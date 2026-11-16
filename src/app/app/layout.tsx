@@ -6,6 +6,7 @@ import { Logo } from "@/components/brand";
 import { Nav } from "@/components/nav";
 import { hasAccess, isAdmin, planExpired, requireUser, trialDaysLeft } from "@/lib/auth";
 import { listBusinesses } from "@/lib/business";
+import { supportLink } from "@/lib/config";
 import { sql } from "@/lib/db";
 
 export const metadata: Metadata = { robots: { index: false } };
@@ -44,6 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Link href="/app/plan" className="text-muted hover:text-ink md:px-3 md:py-1.5">Plan</Link>
           <Link href="/app/referidos" className="hidden text-muted hover:text-ink md:block md:px-3 md:py-1.5">Invitá y ganá</Link>
           <Link href="/app/ajustes" className="text-muted hover:text-ink md:px-3 md:py-1.5">Ajustes</Link>
+          {supportLink() && <a href={supportLink(`Hola! Necesito ayuda con Lucero. Mi cuenta es ${user.email}.`)!} target="_blank" rel="noopener" className="hidden text-muted hover:text-ink md:block md:px-3 md:py-1.5">Ayuda</a>}
           {isAdmin(user) && <Link href="/admin" className="hidden text-muted hover:text-ink md:block md:px-3 md:py-1.5">Admin</Link>}
           <form action={logout}>
             <button className="cursor-pointer text-muted hover:text-ink md:px-3 md:py-1.5">Salir</button>

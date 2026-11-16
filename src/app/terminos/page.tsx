@@ -18,7 +18,7 @@ export default function Terms() {
       <li>No podés usar el servicio para enviar mensajes no solicitados a personas que no son tus clientes.</li>
       <li>Sos responsable de cumplir las políticas de Google y la normativa de protección de datos y defensa del consumidor que te corresponda.</li>
       <h2>3. Prueba, precio y pago</h2>
-      <p>La prueba gratis no requiere medio de pago. Las suscripciones son mensuales, se cobran por adelantado a través de Mercado Pago y se renuevan automáticamente hasta que las canceles. Los precios pueden actualizarse con aviso previo de 15 días por email.</p>
+      <p>La prueba gratis no requiere medio de pago. Las suscripciones son mensuales, se cobran por adelantado a través de Mercado Pago, con renovación automática hasta que las canceles, o por transferencia, mes a mes. Los precios pueden actualizarse con aviso previo de 15 días por email.</p>
       <h2>4. Cancelación</h2>
       <p>Podés cancelar en cualquier momento desde tu panel. Al cancelar o no pagar, tu página de reseñas y tu QR dejan de funcionar. No hay reembolsos por períodos parciales, salvo los que exija la ley.</p>
       <h2>5. Responsabilidad</h2>

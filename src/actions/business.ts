@@ -23,7 +23,7 @@ const base = z.object({
 
 export async function createBusiness(_prev: FormState, form: FormData): Promise<FormState> {
   const user = await requireUser();
-  if (!hasAccess(user)) return { error: "Tu prueba terminó. Elegí un plan para continuar." };
+  if (!hasAccess(user)) return { error: "Tu prueba o tu plan terminó. Renová para continuar." };
   const parsed = base.safeParse(Object.fromEntries(form));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const existing = await listBusinesses(user.id);
@@ -79,7 +79,7 @@ const qrLabel = z.string().trim().min(1, "Poné un nombre para el QR").max(40);
 
 export async function createQrPoint(_prev: FormState, form: FormData): Promise<FormState> {
   const user = await requireUser();
-  if (!hasAccess(user)) return { error: "Tu prueba terminó. Elegí un plan para continuar." };
+  if (!hasAccess(user)) return { error: "Tu prueba o tu plan terminó. Renová para continuar." };
   const biz = await requireBusiness(user);
   const parsed = qrLabel.safeParse(form.get("label"));
   if (!parsed.success) return { error: parsed.error.issues[0].message };

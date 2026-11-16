@@ -23,9 +23,9 @@ export default async function AdminPage() {
   const manualMrr = await sql<{ plan: PlanId; n: number }[]>`
     select plan, count(*)::int as n from users where plan_source = 'manual' group by plan`;
   const users = await sql<
-    { id: string; email: string; name: string; plan: string; plan_source: string | null; trial_ends_at: Date; created_at: Date; biz: string | null; events30: number }[]
+    { id: string; email: string; name: string; plan: string; plan_source: string | null; trial_ends_at: Date; manual_until: Date | null; created_at: Date; biz: string | null; events30: number }[]
   >`
-    select u.id, u.email, u.name, u.plan, u.plan_source, u.trial_ends_at, u.created_at,
+    select u.id, u.email, u.name, u.plan, u.plan_source, u.trial_ends_at, u.manual_until, u.created_at,
       (select string_agg(name, ', ') from businesses where owner_id = u.id) as biz,
       (select count(*)::int from events e join businesses b on b.id = e.business_id
          where b.owner_id = u.id and e.created_at > now() - interval '30 days') as events30
@@ -85,7 +85,7 @@ export default async function AdminPage() {
         <table className="w-full min-w-[820px] text-left text-sm">
           <thead className="border-b border-line text-xs text-muted">
             <tr>
-              {["Cuenta", "Negocio", "Plan", "Fin de prueba", "Uso 30 d", "Alta", "Acciones"].map((h) => (
+              {["Cuenta", "Negocio", "Plan", "Vence", "Uso 30 d", "Alta", "Acciones"].map((h) => (
                 <th key={h} className="px-4 py-3 font-medium">{h}</th>
               ))}
             </tr>
@@ -96,7 +96,9 @@ export default async function AdminPage() {
                 <td className="px-4 py-3"><b>{u.name}</b><br /><span className="text-muted">{u.email}</span></td>
                 <td className="px-4 py-3">{u.biz ?? "—"}</td>
                 <td className="px-4 py-3">{u.plan}{u.plan_source ? ` (${u.plan_source})` : ""}</td>
-                <td className="px-4 py-3">{fmt.format(u.trial_ends_at)}</td>
+                <td className={`px-4 py-3 ${(u.plan === "trial" ? u.trial_ends_at : u.manual_until) && new Date((u.plan === "trial" ? u.trial_ends_at : u.manual_until)!).getTime() < Date.now() ? "font-semibold text-bad" : ""}`}>
+                  {u.plan === "trial" ? fmt.format(u.trial_ends_at) : u.manual_until ? fmt.format(u.manual_until) : "Mercado Pago"}
+                </td>
                 <td className="px-4 py-3 tabular-nums">{u.events30}</td>
                 <td className="px-4 py-3">{fmt.format(u.created_at)}</td>
                 <td className="px-4 py-3">
@@ -115,7 +117,7 @@ export default async function AdminPage() {
                           <option value="pro">pro</option>
                           <option value="agencia">agencia</option>
                         </select>
-                        <button className="btn btn-ghost btn-sm">Fijar</button>
+                        <button className="btn btn-ghost btn-sm" title="Con un plan pago suma un mes desde el vencimiento; con trial lo quita">+1 mes</button>
                       </form>
                     )}
                   </div>

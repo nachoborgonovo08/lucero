@@ -260,6 +260,28 @@ try {
   await page.waitForSelector("text=Premios de referidos por acreditar", { state: "detached" });
   ok("admin: métricas, usuarios y premio de referido");
 
+  // --- Plan por transferencia: se activa por un mes y vence solo ---
+  await page.goto(`${BASE}/admin`);
+  await page.locator("tr:has-text('caro@test.local') select").selectOption("esencial");
+  await page.locator("tr:has-text('caro@test.local') button:has-text('+1 mes')").click();
+  await page.waitForTimeout(800);
+  const [caro] = await sql`select plan, plan_source, manual_until > now() + interval '27 days' as month from users where email = 'caro@test.local'`;
+  assert.deepEqual([caro.plan, caro.plan_source, caro.month], ["esencial", "manual", true]);
+  await pc.goto(`${BASE}/app/plan`);
+  await pc.waitForSelector("text=Tenés el plan Esencial activo hasta el");
+  await pc.waitForSelector("text=lucero.test.alias");
+  const notice = await pc.locator("a:has-text('Ya transferí la renovación')").getAttribute("href");
+  assert.match(decodeURIComponent(notice), /wa\.me\/5491100000000\?text=.*caro@test\.local/);
+  if (shots) await pc.screenshot({ path: `${shots}/plan-transferencia.png`, fullPage: true });
+  await sql`update users set manual_until = now() + interval '2 days 12 hours' where email = 'caro@test.local'`;
+  const renew = await (await fetch(`${BASE}/api/cron/daily`, { headers: { Authorization: "Bearer dev-cron-secret" } })).json();
+  assert.equal(renew.renewalReminders, 0); // sin RESEND_API_KEY no se envía, pero se intenta
+  await sql`update users set manual_until = now() - interval '1 day' where email = 'caro@test.local'`;
+  await pc.goto(`${BASE}/app/plan`);
+  await pc.waitForSelector("text=Tu plan venció.");
+  await pc.waitForSelector("text=Renovar por transferencia");
+  ok("plan por transferencia: alias visible, aviso por WhatsApp, vence solo al mes");
+
   // --- Cancelación y vencimiento ---
   pb.on("dialog", (d) => d.accept());
   await pb.goto(`${BASE}/app/plan`);

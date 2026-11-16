@@ -13,13 +13,20 @@ export async function extendTrial(form: FormData) {
   revalidatePath("/admin");
 }
 
-/** Plan manual (cortesía o cobro por fuera de Mercado Pago). 'trial' lo quita. */
+/** Plan manual (transferencia o cortesía): suma un mes pagado. 'trial' lo quita. */
 export async function setManualPlan(form: FormData) {
   await requireAdmin();
   const id = z.string().uuid().parse(form.get("id"));
   const plan = z.enum(["trial", "esencial", "pro", "agencia"]).parse(form.get("plan"));
-  await sql`update users set plan = ${plan}, plan_source = ${plan === "trial" ? null : "manual"}
-            where id = ${id} and (plan_source is distinct from 'mp')`;
+  // Cada vez que se aplica un plan se suma un mes pagado (desde hoy o desde el vencimiento, lo que sea después).
+  if (plan === "trial") {
+    await sql`update users set plan = 'trial', plan_source = null, manual_until = null
+              where id = ${id} and (plan_source is distinct from 'mp')`;
+  } else {
+    await sql`update users set plan = ${plan}, plan_source = 'manual',
+                manual_until = greatest(coalesce(manual_until, now()), now()) + interval '1 month'
+              where id = ${id} and (plan_source is distinct from 'mp')`;
+  }
   revalidatePath("/admin");
 }
 

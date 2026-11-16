@@ -15,6 +15,7 @@ export type User = {
   plan: PlanState;
   plan_source: "mp" | "manual" | null;
   trial_ends_at: Date;
+  manual_until: Date | null;
   referral_code: string;
   created_at: Date;
 };
@@ -46,7 +47,7 @@ export const getUser = cache(async (): Promise<User | null> => {
   const token = (await cookies()).get(COOKIE)?.value;
   if (!token) return null;
   const rows = await sql<User[]>`
-    select u.id, u.email, u.name, u.plan, u.plan_source, u.trial_ends_at, u.referral_code, u.created_at
+    select u.id, u.email, u.name, u.plan, u.plan_source, u.trial_ends_at, u.manual_until, u.referral_code, u.created_at
     from sessions s join users u on u.id = s.user_id
     where s.token_hash = ${sha256(token)} and s.expires_at > now()`;
   return rows[0] ?? null;
@@ -66,10 +67,17 @@ export async function requireAdmin() {
   return user;
 }
 
-/** Acceso completo: suscripción activa o prueba vigente. */
-export function hasAccess(user: Pick<User, "plan" | "trial_ends_at">) {
-  return user.plan !== "trial" || new Date(user.trial_ends_at).getTime() > Date.now();
+type AccessFields = Pick<User, "plan" | "plan_source" | "trial_ends_at" | "manual_until">;
+
+/** Acceso completo: prueba vigente, suscripción de Mercado Pago activa o mes pagado por transferencia. */
+export function hasAccess(user: AccessFields) {
+  if (user.plan === "trial") return new Date(user.trial_ends_at).getTime() > Date.now();
+  if (user.plan_source === "manual" && user.manual_until) return new Date(user.manual_until).getTime() > Date.now();
+  return true;
 }
+
+/** Plan pago (no prueba) que venció por falta de renovación. */
+export const planExpired = (user: AccessFields) => user.plan !== "trial" && !hasAccess(user);
 
 export function trialDaysLeft(user: Pick<User, "trial_ends_at">) {
   return Math.max(0, Math.ceil((new Date(user.trial_ends_at).getTime() - Date.now()) / 864e5));

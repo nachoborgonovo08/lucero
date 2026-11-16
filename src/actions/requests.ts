@@ -12,7 +12,7 @@ import type { FormState } from "./auth";
 /** Alta de clientes: uno por línea, "Nombre, teléfono" (o un solo cliente con los dos campos). */
 export async function addCustomers(_prev: FormState, form: FormData): Promise<FormState> {
   const user = await requireUser();
-  if (!hasAccess(user)) return { error: "Tu prueba terminó. Elegí un plan para seguir pidiendo reseñas." };
+  if (!hasAccess(user)) return { error: "Tu prueba o tu plan terminó. Renová para seguir pidiendo reseñas." };
   const biz = await requireBusiness(user);
 
   const single = { name: String(form.get("name") ?? "").trim(), phone: String(form.get("phone") ?? "").trim() };

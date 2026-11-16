@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { StarIcon, Stars } from "@/components/brand";
 import { SiteFooter, SiteHeader } from "@/components/site";
-import { BRAND, formatPrice, PLANS, TRIAL_DAYS } from "@/lib/config";
+import { BRAND, formatPrice, PLANS, TRIAL_DAYS, transferEnabled } from "@/lib/config";
+import { mpConfigured } from "@/lib/mp";
 
 const STEPS = [
   { t: "Cargá tu link de Google", d: "Pegás el link de reseñas de tu perfil y en dos minutos tenés tu página y tu cartel con QR listos para imprimir." },
@@ -165,7 +166,10 @@ export default function Landing() {
               </div>
             ))}
           </div>
-          <p className="mt-5 text-center text-sm text-muted">Pagás con Mercado Pago. Sin permanencia.</p>
+          <p className="mt-5 text-center text-sm text-muted">
+            {[mpConfigured() && "Pagás con Mercado Pago", transferEnabled() && (mpConfigured() ? "o por transferencia" : "Pagás por transferencia")].filter(Boolean).join(" ")}
+            {mpConfigured() || transferEnabled() ? ". " : ""}Sin permanencia.
+          </p>
         </section>
 
         {/* FAQ */}

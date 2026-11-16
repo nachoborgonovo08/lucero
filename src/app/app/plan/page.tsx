@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { cancelSubscription, subscribe } from "@/actions/billing";
 import { ActionForm, Submit } from "@/components/form";
-import { hasAccess, requireUser, trialDaysLeft } from "@/lib/auth";
+import { hasAccess, planExpired, requireUser, trialDaysLeft } from "@/lib/auth";
 import { syncPreapproval } from "@/lib/billing";
-import { formatPrice, type PlanId, PLANS } from "@/lib/config";
+import { CopyButton } from "@/components/form";
+import { formatPrice, type PlanId, PLANS, TRANSFER, transferEnabled } from "@/lib/config";
 import { sql } from "@/lib/db";
 import { getPreapproval, mpConfigured, parseExternalRef } from "@/lib/mp";
+import { waLink } from "@/lib/phone";
 
 export const metadata: Metadata = { title: "Plan y pagos" };
 
@@ -19,8 +21,8 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       const pre = await getPreapproval(returned);
       if (parseExternalRef(pre.external_reference)?.userId === user.id) {
         await syncPreapproval(pre);
-        const [fresh] = await sql<{ plan: typeof user.plan; plan_source: typeof user.plan_source }[]>`
-          select plan, plan_source from users where id = ${user.id}`;
+        const [fresh] = await sql<{ plan: typeof user.plan; plan_source: typeof user.plan_source; manual_until: Date | null }[]>`
+          select plan, plan_source, manual_until from users where id = ${user.id}`;
         user = { ...user, ...fresh };
       }
     } catch (err) {
@@ -31,24 +33,45 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   const payments = await sql<{ id: string; amount: string | null; currency: string | null; status: string; created_at: Date }[]>`
     select id, amount, currency, status, created_at from payments where user_id = ${user.id} order by created_at desc limit 12`;
   const paying = user.plan !== "trial";
+  const fmtDate = new Intl.DateTimeFormat("es-AR", { dateStyle: "long" });
 
   return (
     <div className="space-y-6">
       <header>
         <h1 className="h1">Plan y pagos</h1>
         <p className="mt-1 text-muted">
-          {paying
-            ? `Tenés el plan ${PLANS[user.plan as PlanId].name} activo.`
-            : hasAccess(user)
-              ? `Estás en la prueba gratis: te quedan ${trialDaysLeft(user)} días.`
-              : "Tu prueba gratis terminó. Elegí un plan para reactivar tu página y tu QR."}
+          {planExpired(user)
+            ? `Tu plan ${PLANS[user.plan as PlanId].name} venció el ${fmtDate.format(user.manual_until!)}. Renovalo para reactivar tu página y tus QR.`
+            : paying
+              ? `Tenés el plan ${PLANS[user.plan as PlanId].name} activo${user.manual_until ? ` hasta el ${fmtDate.format(user.manual_until)}` : ""}.`
+              : hasAccess(user)
+                ? `Estás en la prueba gratis: te quedan ${trialDaysLeft(user)} días.`
+                : "Tu prueba gratis terminó. Elegí un plan para reactivar tu página y tus QR."}
         </p>
       </header>
 
-      {!mpConfigured() && (
+      {!mpConfigured() && !transferEnabled() && (
         <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-bad">
-          Los pagos todavía no están habilitados en este sitio (falta configurar Mercado Pago).
+          Los pagos todavía no están habilitados. Escribinos y te contamos cómo contratar.
         </p>
+      )}
+
+      {transferEnabled() && user.plan_source !== "mp" && (
+        <section className="card border-star bg-star-soft">
+          <h2 className="font-semibold">{user.plan_source === "manual" ? "Renovar por transferencia" : "Pagar por transferencia"}</h2>
+          <p className="mt-1 text-sm">
+            Transferí el monto del plan que elijas y mandanos el comprobante. Activamos tu plan en el día, por un mes.
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl bg-white px-4 py-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted">Alias</p>
+              <p className="break-all font-mono text-lg font-semibold">{TRANSFER.alias}</p>
+              {TRANSFER.holder && <p className="text-xs text-muted">Titular: {TRANSFER.holder}</p>}
+            </div>
+            <CopyButton text={TRANSFER.alias} label="Copiar alias" />
+          </div>
+          {!TRANSFER.whatsapp && <p className="hint">Respondé el email de bienvenida con el comprobante.</p>}
+        </section>
       )}
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -69,7 +92,20 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
                   <li key={f} className="flex gap-2"><span className="text-ok">✓</span>{f}</li>
                 ))}
               </ul>
-              {!current && user.plan_source !== "manual" && (
+              {transferEnabled() && TRANSFER.whatsapp && user.plan_source !== "mp" && (
+                <a
+                  className={`btn mt-5 w-full ${p.id === "pro" ? "btn-primary" : "btn-ghost"}`}
+                  target="_blank"
+                  rel="noopener"
+                  href={waLink(
+                    TRANSFER.whatsapp,
+                    `Hola! Transferí ${formatPrice(p.price)} por el plan ${p.name} de Lucero. Mi cuenta es ${user.email}. Te mando el comprobante.`,
+                  )}
+                >
+                  {current ? "Ya transferí la renovación" : `Ya transferí: activar ${p.name}`}
+                </a>
+              )}
+              {mpConfigured() && !current && user.plan_source !== "manual" && (
                 <ActionForm action={subscribe} className="mt-5 space-y-3">
                   <input type="hidden" name="plan" value={p.id} />
                   <div>
@@ -87,7 +123,9 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
         })}
       </div>
       <p className="text-sm text-muted">
-        Pago mensual con Mercado Pago. Sin permanencia: cancelás cuando quieras desde acá.
+        {mpConfigured() && user.plan_source !== "manual"
+          ? "Pago mensual con Mercado Pago. Sin permanencia: cancelás cuando quieras desde acá."
+          : "Pago mensual por transferencia. Sin permanencia: si no renovás, el plan se pausa solo al vencer."}
         {paying && user.plan_source === "mp" && " Si cambiás de plan, el anterior se cancela solo al activarse el nuevo."}
       </p>
 

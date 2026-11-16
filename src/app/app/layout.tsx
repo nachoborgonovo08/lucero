@@ -4,7 +4,7 @@ import { logout } from "@/actions/auth";
 import { switchBusiness } from "@/actions/business";
 import { Logo } from "@/components/brand";
 import { Nav } from "@/components/nav";
-import { hasAccess, isAdmin, requireUser, trialDaysLeft } from "@/lib/auth";
+import { hasAccess, isAdmin, planExpired, requireUser, trialDaysLeft } from "@/lib/auth";
 import { listBusinesses } from "@/lib/business";
 import { sql } from "@/lib/db";
 
@@ -54,9 +54,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {!access ? (
           <div className="no-print mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-ink px-5 py-4 text-white">
             <p className="text-sm">
-              <b>Tu prueba gratis terminó.</b> Tu página de reseñas y tu QR están en pausa hasta que elijas un plan.
+              <b>{planExpired(user) ? "Tu plan venció." : "Tu prueba gratis terminó."}</b> Tu página de reseñas y tus QR están en pausa hasta que {planExpired(user) ? "lo renueves" : "elijas un plan"}.
             </p>
-            <Link href="/app/plan" className="btn btn-star btn-sm">Elegir plan</Link>
+            <Link href="/app/plan" className="btn btn-star btn-sm">{planExpired(user) ? "Renovar" : "Elegir plan"}</Link>
           </div>
         ) : (
           user.plan === "trial" &&

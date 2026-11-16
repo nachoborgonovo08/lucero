@@ -5,11 +5,18 @@ import { hasAccess } from "@/lib/auth";
 import { BRAND, type PlanState } from "@/lib/config";
 import { sql } from "@/lib/db";
 
-type Row = { name: string; google_review_url: string; plan: PlanState; trial_ends_at: Date };
+type Row = {
+  name: string;
+  google_review_url: string;
+  plan: PlanState;
+  plan_source: "mp" | "manual" | null;
+  trial_ends_at: Date;
+  manual_until: Date | null;
+};
 
 async function load(slug: string) {
   const [row] = await sql<Row[]>`
-    select b.name, b.google_review_url, u.plan, u.trial_ends_at
+    select b.name, b.google_review_url, u.plan, u.plan_source, u.trial_ends_at, u.manual_until
     from businesses b join users u on u.id = b.owner_id where b.slug = ${slug}`;
   return row;
 }

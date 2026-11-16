@@ -149,3 +149,6 @@ alter table users drop constraint if exists users_plan_check;
 alter table users add constraint users_plan_check check (plan in ('trial', 'esencial', 'pro', 'agencia'));
 alter table subscriptions drop constraint if exists subscriptions_plan_check;
 alter table subscriptions add constraint subscriptions_plan_check check (plan in ('esencial', 'pro', 'agencia'));
+
+-- === v3: planes cobrados por transferencia (vencen solos) ===
+alter table users add column if not exists manual_until timestamptz;

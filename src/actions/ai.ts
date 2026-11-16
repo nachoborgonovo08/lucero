@@ -18,7 +18,7 @@ const schema = z.object({
 
 export async function createReply(_prev: ReplyState, form: FormData): Promise<ReplyState> {
   const user = await requireUser();
-  if (!hasAccess(user)) return { error: "Tu prueba terminó. Elegí un plan para seguir usando la IA." };
+  if (!hasAccess(user)) return { error: "Tu prueba o tu plan terminó. Renová para seguir usando la IA." };
   if (!aiConfigured()) return { error: "Las respuestas con IA todavía no están habilitadas en este sitio." };
   const biz = await requireBusiness(user);
   const parsed = schema.safeParse(Object.fromEntries(form));
@@ -53,7 +53,7 @@ export async function createReply(_prev: ReplyState, form: FormData): Promise<Re
 /** Resume qué se repite en los comentarios privados de los últimos 90 días. Cuenta como un uso de IA. */
 export async function analyzeFeedback(_prev: ReplyState): Promise<ReplyState> {
   const user = await requireUser();
-  if (!hasAccess(user)) return { error: "Tu prueba terminó. Elegí un plan para seguir usando la IA." };
+  if (!hasAccess(user)) return { error: "Tu prueba o tu plan terminó. Renová para seguir usando la IA." };
   if (!aiConfigured()) return { error: "El análisis con IA todavía no está habilitado en este sitio." };
   const biz = await requireBusiness(user);
   const items = await sql<{ rating: number | null; message: string; date: string }[]>`

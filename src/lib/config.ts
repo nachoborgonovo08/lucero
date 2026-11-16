@@ -97,6 +97,14 @@ export function formatPrice(amount: number) {
   }).format(amount);
 }
 
+/** Cobro por transferencia: alias de la cuenta que recibe y WhatsApp para mandar el comprobante. */
+export const TRANSFER = {
+  alias: (process.env.TRANSFER_ALIAS ?? "").trim(),
+  holder: (process.env.TRANSFER_HOLDER ?? "").trim(),
+  whatsapp: (process.env.TRANSFER_WHATSAPP ?? "").replace(/\D/g, ""),
+};
+export const transferEnabled = () => Boolean(TRANSFER.alias);
+
 export const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
   .split(",")
   .map((e) => e.trim().toLowerCase())

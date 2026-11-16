@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lucero
 
-## Getting Started
+Micro-SaaS para que negocios locales consigan más reseñas en Google: página de reseñas con QR, pedidos por WhatsApp con un toque, buzón de comentarios privados, respuestas con IA, suscripciones con Mercado Pago, referidos y panel de administración.
 
-First, run the development server:
+El plan de negocio completo (investigación, precios, marketing, plan 30/60/90) está en [`docs/NEGOCIO.md`](docs/NEGOCIO.md).
+
+## Stack
+
+- Next.js 16 (App Router, Server Actions) + TypeScript + Tailwind 4
+- PostgreSQL (Supabase o cualquier Postgres) con el cliente `postgres`
+- Sesiones propias (bcrypt + cookie httpOnly, token guardado con hash)
+- Mercado Pago Suscripciones (preapproval + webhook firmado)
+- Claude (Anthropic) para redactar respuestas · Resend para emails
+
+## Desarrollo local
 
 ```bash
+cp .env.example .env.local   # completar DATABASE_URL como mínimo
+npm install
+npm run db:migrate
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sin `MP_ACCESS_TOKEN`, `ANTHROPIC_API_KEY` o `RESEND_API_KEY` la app funciona igual: cada pantalla avisa que esa función no está habilitada (no simula nada).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Pruebas de punta a punta
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Recorren registro, alta, pedidos, página pública, pagos (contra un simulador local de la API de Mercado Pago), referidos, admin, cron y sesión. Necesitan Playwright (`npm i -D playwright && npx playwright install chromium`).
 
-## Learn More
+```bash
+# .env.local de prueba: MP_API_BASE=http://127.0.0.1:4010, MP_ACCESS_TOKEN=TEST-fake-token,
+# MP_WEBHOOK_SECRET=dev-webhook-secret, CRON_SECRET=dev-cron-secret, ADMIN_EMAILS=admin@test.local
+node tests/fake-mp.mjs &
+npm run build && npm start &
+node --env-file=.env.local tests/e2e.mjs   # ¡borra los datos de la base!
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Puesta en producción (Vercel + Supabase)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Base de datos**: crear un proyecto en Supabase y copiar la cadena *Transaction pooler* (puerto 6543). Correr `DATABASE_URL=... npm run db:migrate`.
+2. **Vercel**: importar el repo y cargar las variables de `.env.example`. `APP_URL` es el dominio final, sin barra.
+3. **Mercado Pago** (*Tus integraciones*): crear una aplicación, copiar el *Access Token* de producción en `MP_ACCESS_TOKEN`. En *Webhooks* apuntar a `https://TU-DOMINIO/api/mp/webhook`, activar los eventos **Planes y suscripciones**, y copiar la *clave secreta* en `MP_WEBHOOK_SECRET`. Probar primero con usuarios de prueba.
+4. **Precios**: `PRICE_ESENCIAL` y `PRICE_PRO` en la moneda de tu cuenta de Mercado Pago (`CURRENCY`).
+5. **Anthropic**: `ANTHROPIC_API_KEY`. **Resend**: verificar el dominio y cargar `RESEND_API_KEY` y `EMAIL_FROM`.
+6. **Admin y cron**: `ADMIN_EMAILS` con tu email; `CRON_SECRET` con un valor aleatorio largo (Vercel lo envía solo al cron de `vercel.json`).
+7. Completar los datos legales en `/terminos` y `/privacidad`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Mapa del código
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Ruta | Qué hay |
+| --- | --- |
+| `db/schema.sql` | Esquema completo, idempotente |
+| `src/lib/` | config y planes, auth, Mercado Pago, facturación, IA, emails, teléfonos |
+| `src/actions/` | Server Actions (auth, negocio, pedidos, IA, pagos, admin) |
+| `src/app/r/[slug]` | Página pública de reseñas |
+| `src/app/app/` | Panel del cliente |
+| `src/app/admin` | Panel de administración |
+| `src/app/api/` | Eventos públicos, webhook de MP, cron diario, QR |

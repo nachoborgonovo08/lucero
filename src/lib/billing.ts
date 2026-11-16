@@ -1,6 +1,6 @@
 import { REFERRAL_REWARD_DAYS } from "./config";
 import { sql } from "./db";
-import { type AuthorizedPayment, type Preapproval, parseExternalRef } from "./mp";
+import { type AuthorizedPayment, cancelPreapproval, type Preapproval, parseExternalRef } from "./mp";
 
 /**
  * Sincroniza el estado de una suscripción de Mercado Pago con la base.
@@ -21,6 +21,18 @@ export async function syncPreapproval(pre: Preapproval) {
 
   if (pre.status === "authorized") {
     await sql`update users set plan = ${ref.plan}, plan_source = 'mp' where id = ${ref.userId}`;
+    // Cambio de plan: se cancela la suscripción anterior para que no haya doble cobro.
+    const old = await sql<{ provider_id: string }[]>`
+      select provider_id from subscriptions
+      where user_id = ${ref.userId} and status = 'authorized' and provider_id <> ${pre.id}`;
+    for (const o of old) {
+      try {
+        await cancelPreapproval(o.provider_id);
+        await sql`update subscriptions set status = 'cancelled', updated_at = now() where provider_id = ${o.provider_id}`;
+      } catch (err) {
+        console.error("[billing] no se pudo cancelar la suscripción anterior", o.provider_id, err);
+      }
+    }
   } else if (pre.status === "cancelled" || pre.status === "paused") {
     // Solo se baja el plan si no queda otra suscripción activa (p. ej. tras un cambio de plan).
     await sql`

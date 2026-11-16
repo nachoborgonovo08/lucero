@@ -88,7 +88,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       </div>
       <p className="text-sm text-muted">
         Pago mensual con Mercado Pago. Sin permanencia: cancelás cuando quieras desde acá.
-        {paying && user.plan_source === "mp" && " Si cambiás de plan, cancelá el anterior después de activar el nuevo."}
+        {paying && user.plan_source === "mp" && " Si cambiás de plan, el anterior se cancela solo al activarse el nuevo."}
       </p>
 
       {user.plan_source === "mp" && (

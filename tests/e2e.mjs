@@ -183,6 +183,15 @@ try {
   if (shots) await page.screenshot({ path: `${shots}/plan.png`, fullPage: true });
   ok("webhook firmado activa el plan; el cobro se registra una sola vez");
 
+  // Cambio de plan: al activarse Pro, la suscripción Esencial se cancela sola.
+  const up = await subscribeAndPay(page, "pro");
+  assert.equal((await webhook("subscription_preapproval", up.id)).status, 200);
+  const subs = await sql`select plan, status from subscriptions order by created_at`;
+  assert.deepEqual(subs.filter((x) => x.status !== "pending").map((x) => `${x.plan}:${x.status}`), ["esencial:cancelled", "pro:authorized"]);
+  assert.equal((await (await fetch(`http://127.0.0.1:4010/preapproval/${a.id}`, { headers: { Authorization: "Bearer TEST-fake-token" } })).json()).status, "cancelled");
+  assert.equal((await sql`select plan from users where email = 'admin@test.local'`)[0].plan, "pro");
+  ok("cambio de plan cancela la suscripción anterior en Mercado Pago (sin doble cobro)");
+
   // --- Referidos ---
   const ctxB = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const pb = await ctxB.newPage();

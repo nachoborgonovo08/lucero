@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "db:migrate": "tsx --env-file-if-exists=.env.local scripts/migrate.mts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "vercel-build": "tsx scripts/migrate.mts --if-configured && next build"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

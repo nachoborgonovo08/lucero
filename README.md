@@ -35,15 +35,16 @@ npm run build && npm start &
 node --env-file=.env.local tests/e2e.mjs   # ¡borra los datos de la base!
 ```
 
-## Puesta en producción (Vercel + Supabase)
+## Puesta en producción (Vercel + Neon)
 
-1. **Base de datos**: crear un proyecto en Supabase y copiar la cadena *Transaction pooler* (puerto 6543). Correr `DATABASE_URL=... npm run db:migrate`.
-2. **Vercel**: importar el repo y cargar las variables de `.env.example`. `APP_URL` es el dominio final, sin barra.
-3. **Mercado Pago** (*Tus integraciones*): crear una aplicación, copiar el *Access Token* de producción en `MP_ACCESS_TOKEN`. En *Webhooks* apuntar a `https://TU-DOMINIO/api/mp/webhook`, activar los eventos **Planes y suscripciones**, y copiar la *clave secreta* en `MP_WEBHOOK_SECRET`. Probar primero con usuarios de prueba.
-4. **Precios**: `PRICE_ESENCIAL` y `PRICE_PRO` en la moneda de tu cuenta de Mercado Pago (`CURRENCY`).
+1. **Proyecto**: en Vercel, importar el repo. El build (`vercel-build`) aplica el esquema de la base solo, si hay `DATABASE_URL`.
+2. **Base de datos**: en el proyecto de Vercel, *Storage → Create Database → Neon* (plan gratuito) y conectarla al proyecto. Eso crea `DATABASE_URL` automáticamente. Volver a desplegar. Sirve cualquier otro Postgres cargando `DATABASE_URL` a mano.
+3. **Mercado Pago** (*Tus integraciones*): crear una aplicación y cargar el *Access Token* en `MP_ACCESS_TOKEN`. En *Webhooks* apuntar a `https://TU-DOMINIO/api/mp/webhook`, activar los eventos **Planes y suscripciones**, y copiar la *clave secreta* en `MP_WEBHOOK_SECRET`. Probar primero con usuarios de prueba.
+4. **Precios**: `PRICE_ESENCIAL`, `PRICE_PRO` y `PRICE_AGENCIA` en la moneda de tu cuenta de Mercado Pago (`CURRENCY`).
 5. **Anthropic**: `ANTHROPIC_API_KEY`. **Resend**: verificar el dominio y cargar `RESEND_API_KEY` y `EMAIL_FROM`.
 6. **Admin y cron**: `ADMIN_EMAILS` con tu email; `CRON_SECRET` con un valor aleatorio largo (Vercel lo envía solo al cron de `vercel.json`).
-7. Completar los datos legales en `/terminos` y `/privacidad`.
+7. **Dominio propio**: al sumarlo, definir `APP_URL` con ese dominio (sin barra final). Sin `APP_URL` se usa el dominio de producción de Vercel.
+8. Completar los datos legales en `/terminos` y `/privacidad`.
 
 ## Mapa del código
 

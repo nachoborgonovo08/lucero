@@ -1,7 +1,11 @@
 export const BRAND = "Lucero";
 export const TAGLINE = "Más reseñas en Google para tu negocio";
 
-export const APP_URL = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+// En Vercel, si no se define APP_URL se usa el dominio de producción del proyecto.
+const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+export const APP_URL = (
+  process.env.APP_URL ?? (vercelUrl ? `https://${vercelUrl}` : "http://localhost:3000")
+).replace(/\/$/, "");
 
 export const TRIAL_DAYS = 14;
 export const REFERRED_TRIAL_DAYS = 30;

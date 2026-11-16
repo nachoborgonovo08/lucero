@@ -1,8 +1,13 @@
 import { readFileSync } from "node:fs";
 import postgres from "postgres";
 
-const url = process.env.DATABASE_URL;
+// Para migrar conviene la conexión directa (sin pooler) cuando el proveedor la ofrece.
+const url = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
 if (!url) {
+  if (process.argv.includes("--if-configured")) {
+    console.log("Sin DATABASE_URL: se omite la migración.");
+    process.exit(0);
+  }
   console.error("Falta DATABASE_URL");
   process.exit(1);
 }

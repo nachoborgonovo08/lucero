@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { hasAccess, requireUser } from "@/lib/auth";
+import { hasAccess, newToken, requireUser } from "@/lib/auth";
 import { BIZ_COOKIE, isGoogleReviewUrl, listBusinesses, requireBusiness, uniqueSlug } from "@/lib/business";
 import { COUNTRY_CODES, DEFAULT_WHATSAPP_TEMPLATE, limitsFor, TONES } from "@/lib/config";
 import { sql } from "@/lib/db";
@@ -73,4 +73,29 @@ export async function switchBusiness(form: FormData) {
     (await cookies()).set(BIZ_COOKIE, id, { path: "/", sameSite: "lax", maxAge: 31536000 });
   }
   redirect("/app");
+}
+
+const qrLabel = z.string().trim().min(1, "Poné un nombre para el QR").max(40);
+
+export async function createQrPoint(_prev: FormState, form: FormData): Promise<FormState> {
+  const user = await requireUser();
+  if (!hasAccess(user)) return { error: "Tu prueba terminó. Elegí un plan para continuar." };
+  const biz = await requireBusiness(user);
+  const parsed = qrLabel.safeParse(form.get("label"));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const [{ n }] = await sql<{ n: number }[]>`select count(*)::int as n from qr_points where business_id = ${biz.id}`;
+  const max = limitsFor(user.plan).qrPerBusiness;
+  if (n >= max) return { error: `Tu plan incluye hasta ${max} QR por local.` };
+  await sql`insert into qr_points (business_id, label, code)
+            values (${biz.id}, ${parsed.data}, ${newToken(6).replace(/[-_]/g, "x")})`;
+  revalidatePath("/app/qr");
+  return { ok: `QR "${parsed.data}" creado.` };
+}
+
+export async function deleteQrPoint(form: FormData) {
+  const user = await requireUser();
+  await sql`
+    delete from qr_points p using businesses b
+    where p.id = ${String(form.get("id"))} and b.id = p.business_id and b.owner_id = ${user.id}`;
+  revalidatePath("/app/qr");
 }

@@ -40,6 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <button className="btn btn-ghost btn-sm mt-1 w-full">Cambiar</button>
             </form>
           )}
+          {businesses.length > 1 && <Link href="/app/locales" className="text-muted hover:text-ink md:px-3 md:py-1.5">Mis negocios</Link>}
           <Link href="/app/plan" className="text-muted hover:text-ink md:px-3 md:py-1.5">Plan</Link>
           <Link href="/app/referidos" className="hidden text-muted hover:text-ink md:block md:px-3 md:py-1.5">Invitá y ganá</Link>
           <Link href="/app/ajustes" className="text-muted hover:text-ink md:px-3 md:py-1.5">Ajustes</Link>

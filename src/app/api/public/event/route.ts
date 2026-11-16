@@ -11,6 +11,7 @@ const schema = z.object({
   rating: z.number().int().min(1).max(5).optional(),
   source: z.enum(["qr", "whatsapp", "link"]).default("link"),
   c: z.string().max(40).optional(),
+  q: z.string().max(20).optional(),
   message: z.string().trim().max(2000).optional(),
   contact: z.string().trim().max(120).optional(),
 });
@@ -53,8 +54,12 @@ export async function POST(req: Request) {
     );
   }
 
-  await sql`insert into events (business_id, customer_id, type, rating, source)
-            values (${biz.id}, ${customer?.id ?? null}, ${d.type}, ${d.rating ?? null}, ${customer ? "whatsapp" : d.source})`;
+  const [point] = d.q && !customer
+    ? await sql<{ id: string }[]>`select id from qr_points where code = ${d.q} and business_id = ${biz.id}`
+    : [];
+  await sql`insert into events (business_id, customer_id, qr_id, type, rating, source)
+            values (${biz.id}, ${customer?.id ?? null}, ${point?.id ?? null}, ${d.type}, ${d.rating ?? null},
+                    ${customer ? "whatsapp" : point ? "qr" : d.source})`;
 
   const next = NEXT_STATUS[d.type];
   if (customer && RANK.indexOf(next) > RANK.indexOf(customer.status)) {

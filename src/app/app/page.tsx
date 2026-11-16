@@ -41,6 +41,14 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     group by rating`;
   const total = dist.reduce((a, d) => a + d.n, 0);
 
+  const channels = await sql<{ source: string; views: number; clicks: number }[]>`
+    select source, count(*) filter (where type = 'view')::int as views,
+           count(*) filter (where type = 'google_click')::int as clicks
+    from events where business_id = ${biz.id} and created_at > now() - interval '30 days'
+    group by source`;
+  const CHANNELS = [["qr", "QR"], ["whatsapp", "WhatsApp"], ["link", "Link directo"]] as const;
+  const maxCh = Math.max(1, ...channels.map((c) => c.views));
+
   const url = publicUrl(biz.slug);
   const rate = s.views ? Math.round((s.clicks / s.views) * 100) : 0;
   const empty = s.views === 0 && s.sent === 0;
@@ -122,6 +130,27 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
               </div>
             </>
           )}
+        </div>
+      </section>
+
+      <section className="card">
+        <div className="flex items-baseline justify-between">
+          <h2 className="font-semibold">Qué canal te trae más reseñas</h2>
+          <Link href="/app/qr" className="text-sm text-muted underline">Ver por QR</Link>
+        </div>
+        <div className="mt-4 space-y-3">
+          {CHANNELS.map(([id, label]) => {
+            const c = channels.find((x) => x.source === id) ?? { views: 0, clicks: 0 };
+            return (
+              <div key={id} className="grid grid-cols-[6.5rem_1fr_auto] items-center gap-3 text-sm">
+                <span>{label}</span>
+                <div className="h-2.5 overflow-hidden rounded-full bg-line">
+                  <div className="h-full rounded-full bg-ink" style={{ width: `${(c.views / maxCh) * 100}%` }} />
+                </div>
+                <span className="text-muted tabular-nums">{c.views} visitas · <b className="text-ink">{c.clicks}</b> a Google</span>
+              </div>
+            );
+          })}
         </div>
       </section>
 

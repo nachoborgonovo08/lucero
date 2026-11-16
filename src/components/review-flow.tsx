@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { StarIcon } from "./brand";
 
-type Props = { slug: string; name: string; googleUrl: string; token?: string; source: "qr" | "whatsapp" | "link" };
+type Props = { slug: string; name: string; googleUrl: string; token?: string; qr?: string; source: "qr" | "whatsapp" | "link" };
 
-export function ReviewFlow({ slug, name, googleUrl, token, source }: Props) {
+export function ReviewFlow({ slug, name, googleUrl, token, qr, source }: Props) {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [mode, setMode] = useState<"choose" | "write" | "sent">("choose");
@@ -17,7 +17,7 @@ export function ReviewFlow({ slug, name, googleUrl, token, source }: Props) {
     fetch("/api/public/event", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, source, c: token, ...payload }),
+      body: JSON.stringify({ slug, source, c: token, q: qr, ...payload }),
       keepalive: true,
     });
 

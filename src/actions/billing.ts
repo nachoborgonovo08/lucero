@@ -5,12 +5,13 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { syncPreapproval } from "@/lib/billing";
+import { PLAN_IDS } from "@/lib/config";
 import { sql } from "@/lib/db";
 import { cancelPreapproval, createSubscription, MpError, mpConfigured } from "@/lib/mp";
 import type { FormState } from "./auth";
 
 const schema = z.object({
-  plan: z.enum(["esencial", "pro"]),
+  plan: z.enum(PLAN_IDS),
   payer_email: z.string().trim().toLowerCase().email("Ingresá el email de tu cuenta de Mercado Pago"),
 });
 

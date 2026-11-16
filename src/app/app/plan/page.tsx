@@ -3,7 +3,7 @@ import { cancelSubscription, subscribe } from "@/actions/billing";
 import { ActionForm, Submit } from "@/components/form";
 import { hasAccess, requireUser, trialDaysLeft } from "@/lib/auth";
 import { syncPreapproval } from "@/lib/billing";
-import { formatPrice, PLANS } from "@/lib/config";
+import { formatPrice, type PlanId, PLANS } from "@/lib/config";
 import { sql } from "@/lib/db";
 import { getPreapproval, mpConfigured, parseExternalRef } from "@/lib/mp";
 
@@ -38,7 +38,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
         <h1 className="h1">Plan y pagos</h1>
         <p className="mt-1 text-muted">
           {paying
-            ? `Tenés el plan ${PLANS[user.plan as "esencial" | "pro"].name} activo.`
+            ? `Tenés el plan ${PLANS[user.plan as PlanId].name} activo.`
             : hasAccess(user)
               ? `Estás en la prueba gratis: te quedan ${trialDaysLeft(user)} días.`
               : "Tu prueba gratis terminó. Elegí un plan para reactivar tu página y tu QR."}
@@ -51,7 +51,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
         </p>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
         {Object.values(PLANS).map((p) => {
           const current = user.plan === p.id;
           return (
@@ -78,7 +78,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
                     <p className="hint">Tiene que ser el email con el que entrás a Mercado Pago.</p>
                   </div>
                   <Submit className={`btn w-full ${p.id === "pro" ? "btn-primary" : "btn-ghost"}`}>
-                    {paying ? `Cambiar a ${p.name}` : `Suscribirme a ${p.name}`}
+                    {paying ? `Cambiar a ${p.name}` : `Elegir ${p.name}`}
                   </Submit>
                 </ActionForm>
               )}

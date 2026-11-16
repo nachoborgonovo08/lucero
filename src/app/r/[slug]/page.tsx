@@ -24,10 +24,10 @@ export default async function PublicReviewPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ c?: string; s?: string }>;
+  searchParams: Promise<{ c?: string; s?: string; q?: string }>;
 }) {
   const { slug } = await params;
-  const { c, s } = await searchParams;
+  const { c, s, q } = await searchParams;
   const biz = await load(slug);
   if (!biz) notFound();
   const active = hasAccess(biz);
@@ -37,7 +37,7 @@ export default async function PublicReviewPage({
       <div className="w-full max-w-md">
         <div className="card !p-7 shadow-sm">
           {active ? (
-            <ReviewFlow slug={slug} name={biz.name} googleUrl={biz.google_review_url} token={c?.slice(0, 40)} source={c ? "whatsapp" : s === "qr" ? "qr" : "link"} />
+            <ReviewFlow slug={slug} name={biz.name} googleUrl={biz.google_review_url} token={c?.slice(0, 40)} qr={q?.slice(0, 20)} source={c ? "whatsapp" : s === "qr" || q ? "qr" : "link"} />
           ) : (
             <div className="text-center">
               <h1 className="text-xl font-semibold">{biz.name}</h1>

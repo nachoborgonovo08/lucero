@@ -139,6 +139,25 @@ try {
   assert.equal((await fetch(`${BASE}/r/no-existe`)).status, 404);
   ok("visita por QR atribuida, PNG del QR descargable, slug inexistente da 404");
 
+  // --- QR múltiples ---
+  await page.goto(`${BASE}/app/qr`);
+  await page.fill("#label", "Mesa 4");
+  await page.locator("form:has(#label) button[type=submit]").click();
+  await page.waitForSelector('text=QR "Mesa 4" creado');
+  const [mesa] = await sql`select * from qr_points`;
+  const scan = await phone.newPage();
+  await scan.goto(`${BASE}/r/barberia-don-julio?q=${mesa.code}`);
+  await scan.click('[aria-label="5 estrellas"]');
+  await scan.waitForTimeout(600);
+  const perQr = await sql`select type, source from events where qr_id = ${mesa.id} order by id`;
+  assert.deepEqual(perQr.map((e) => `${e.type}:${e.source}`), ["view:qr", "rating:qr"]);
+  assert.equal((await fetch(`${BASE}/api/qr/barberia-don-julio?q=${mesa.code}&format=png`)).status, 200);
+  assert.equal((await fetch(`${BASE}/api/qr/barberia-don-julio?q=inventado`)).status, 404);
+  await page.goto(`${BASE}/app/qr?q=${mesa.code}`);
+  await page.waitForSelector("text=Cartel de: Mesa 4");
+  if (shots) await page.screenshot({ path: `${shots}/qr.png`, fullPage: true });
+  ok("QR por mesa: se crea, atribuye sus escaneos y tiene su propio cartel");
+
   // --- Panel ---
   await page.goto(`${BASE}/app/comentarios`);
   await page.waitForSelector("text=esperé 40 minutos");
@@ -148,7 +167,8 @@ try {
   if (shots) await page.screenshot({ path: `${shots}/dashboard.png`, fullPage: true });
   await page.goto(`${BASE}/app/qr`);
   assert.ok(await page.locator("svg path").count());
-  if (shots) await page.screenshot({ path: `${shots}/qr.png`, fullPage: true });
+  await page.goto(`${BASE}/app/comentarios`);
+  assert.ok(await page.locator("button:has-text('Analizar con IA')").isDisabled());
   await page.goto(`${BASE}/app/respuestas`);
   await page.waitForSelector("text=todavía no están habilitadas");
   ok("buzón, tablero, cartel QR y aviso de IA sin configurar");
@@ -218,6 +238,18 @@ try {
   await pc.goto(`${BASE}/admin`);
   await pc.waitForURL("**/app/alta");
   ok("un preapproval ajeno no activa el plan; /admin bloqueado para no admins");
+
+  // --- Varios negocios (Pro / Agencia) ---
+  await page.goto(`${BASE}/app/alta`);
+  await createBusiness(page, "Estética Lumen");
+  await page.goto(`${BASE}/app/locales`);
+  await page.waitForSelector("text=2 de 3 en tu plan");
+  await page.waitForSelector("td:has-text(\"Estética Lumen\")");
+  if (shots) await page.screenshot({ path: `${shots}/locales.png`, fullPage: true });
+  await page.locator("tr:has-text('Barbería Don Julio') button").click();
+  await page.waitForURL("**/app");
+  await page.waitForSelector("h1:has-text('Barbería Don Julio')");
+  ok("vista de varios negocios y cambio de negocio activo");
 
   // --- Admin ---
   await page.goto(`${BASE}/admin`);

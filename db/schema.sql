@@ -133,3 +133,19 @@ create table if not exists rate_limits (
   count int not null default 1,
   primary key (key, window_start)
 );
+
+-- === v2: QR múltiples, plan Agencia ===
+create table if not exists qr_points (
+  id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references businesses (id) on delete cascade,
+  label text not null,
+  code text not null unique,
+  created_at timestamptz not null default now()
+);
+create index if not exists qr_points_business_idx on qr_points (business_id);
+alter table events add column if not exists qr_id uuid references qr_points (id) on delete set null;
+
+alter table users drop constraint if exists users_plan_check;
+alter table users add constraint users_plan_check check (plan in ('trial', 'esencial', 'pro', 'agencia'));
+alter table subscriptions drop constraint if exists subscriptions_plan_check;
+alter table subscriptions add constraint subscriptions_plan_check check (plan in ('esencial', 'pro', 'agencia'));

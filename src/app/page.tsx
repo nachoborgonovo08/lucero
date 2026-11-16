@@ -10,10 +10,10 @@ const STEPS = [
 ];
 
 const FEATURES = [
-  { t: "Cartel con QR listo para imprimir", d: "Diseñado para el mostrador, la caja o la mesa. Lo imprimís en cualquier lado, sin esperar una placa por correo." },
+  { t: "Un QR para cada mesa, caja o empleado", d: "Creás los QR que necesites y cada uno tiene sus propios números. Sabés qué lugar y qué persona consigue más reseñas." },
   { t: "Pedidos por WhatsApp con un toque", d: "Cargás nombre y teléfono, o pegás la lista del día, y cada mensaje sale personalizado desde tu WhatsApp. Sin bots ni riesgo de bloqueo." },
   { t: "Buzón privado", d: "El cliente también puede escribirte a vos directamente. Te enterás del problema al instante y lo resolvés antes de perderlo." },
-  { t: "Respuestas con IA", d: "Pegás una reseña, buena o mala, y recibís una respuesta con el tono de tu negocio, lista para publicar." },
+  { t: "IA que responde y detecta problemas", d: "Te sugiere la respuesta a cada reseña con el tono de tu negocio, y resume qué se repite en los comentarios que recibís." },
   { t: "Seguimiento de cada pedido", d: "Sabés quién abrió el link, quién calificó y quién llegó a Google, para insistir solo donde hace falta." },
   { t: "Resumen semanal automático", d: "Un email por semana con tus números y qué hacer. No tenés que acordarte de entrar al panel." },
 ];
@@ -24,7 +24,8 @@ const FAQ = [
   { q: "¿Los mensajes salen de mi WhatsApp?", a: "Sí. Lucero arma el mensaje personalizado y abre tu WhatsApp con todo listo: vos tocás enviar. Por eso no hace falta WhatsApp Business API ni hay costo por mensaje." },
   { q: "¿Qué diferencia hay con una placa NFC o un QR suelto?", a: "La placa solo abre el link. Lucero además te deja pedir por WhatsApp a quien ya se fue, medir qué funciona, recibir comentarios privados y responder reseñas con IA." },
   { q: "¿Puedo cancelar cuando quiera?", a: "Sí, desde tu panel, con un clic. No hay permanencia ni costo de alta." },
-  { q: "¿Sirve para más de un local?", a: "El plan Pro incluye hasta 3 locales, cada uno con su página, su QR y sus números." },
+  { q: "¿Sirve para más de un local?", a: "El plan Pro incluye hasta 3 locales, cada uno con su página, sus QR y sus números." },
+  { q: "Tengo una agencia, ¿puedo ofrecerlo a mis clientes?", a: "Sí. Con el plan Agencia manejás hasta 25 negocios desde una sola cuenta, con una vista general de todos, y lo sumás a tus propios servicios." },
 ];
 
 export default function Landing() {
@@ -141,10 +142,10 @@ export default function Landing() {
         </section>
 
         {/* Precios */}
-        <section id="precios" className="mx-auto max-w-4xl scroll-mt-20 px-4 py-20">
+        <section id="precios" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20">
           <h2 className="text-center text-3xl font-semibold tracking-tight">Un precio simple, sin costo de alta</h2>
           <p className="mt-3 text-center text-muted">Menos de lo que te deja un cliente nuevo. {TRIAL_DAYS} días gratis para comprobarlo.</p>
-          <div className="mt-10 grid gap-5 md:grid-cols-2">
+          <div className="mt-10 grid gap-5 lg:grid-cols-3">
             {Object.values(PLANS).map((p) => (
               <div key={p.id} className={`card flex flex-col ${p.id === "esencial" ? "border-2 !border-ink" : ""}`}>
                 <div className="flex items-center justify-between">
@@ -160,7 +161,7 @@ export default function Landing() {
                     <li key={f} className="flex gap-2.5"><span className="text-ok">✓</span>{f}</li>
                   ))}
                 </ul>
-                <Link href="/registro" className={`btn mt-6 w-full ${p.id === "esencial" ? "btn-star" : "btn-ghost"}`}>Empezar gratis</Link>
+                <Link href="/registro" className={`btn mt-6 w-full ${p.id === "esencial" ? "btn-star" : "btn-ghost"}`}>{p.id === "agencia" ? "Probar con mis clientes" : "Empezar gratis"}</Link>
               </div>
             ))}
           </div>

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { markFeedbackRead } from "@/actions/requests";
 import { Stars } from "@/components/brand";
+import { Insights } from "@/components/insights";
 import { requireUser } from "@/lib/auth";
 import { requireBusiness } from "@/lib/business";
+import { MIN_FEEDBACK_FOR_INSIGHTS } from "@/lib/config";
 import { sql } from "@/lib/db";
 
 export const metadata: Metadata = { title: "Buzón privado" };
@@ -17,12 +19,17 @@ export default async function FeedbackPage() {
     from feedback f left join customers c on c.id = f.customer_id
     where f.business_id = ${biz.id} order by f.created_at desc limit 100`;
 
+  const [{ recent }] = await sql<{ recent: number }[]>`
+    select count(*)::int as recent from feedback
+    where business_id = ${biz.id} and created_at > now() - interval '90 days'`;
+
   return (
     <div className="space-y-6">
       <header>
         <h1 className="h1">Buzón privado</h1>
         <p className="mt-1 text-muted">Lo que tus clientes prefirieron decirte a vos directamente. Respondé rápido: un problema bien resuelto suele terminar en una buena reseña.</p>
       </header>
+      <Insights count={recent} min={MIN_FEEDBACK_FOR_INSIGHTS} />
       {items.length === 0 ? (
         <div className="card text-center text-sm text-muted">Todavía no recibiste comentarios privados.</div>
       ) : (

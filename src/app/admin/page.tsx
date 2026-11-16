@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { extendTrial, markReferralRewarded, setManualPlan } from "@/actions/admin";
 import { requireAdmin } from "@/lib/auth";
-import { CURRENCY, formatPrice, PLANS } from "@/lib/config";
+import { CURRENCY, formatPrice, type PlanId, PLANS } from "@/lib/config";
 import { sql } from "@/lib/db";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false } };
@@ -14,13 +14,13 @@ export default async function AdminPage() {
       count(*) filter (where plan = 'trial' and trial_ends_at > now())::int as trials,
       count(*) filter (where plan = 'trial' and trial_ends_at <= now())::int as expired,
       count(*) filter (where plan = 'esencial')::int as esencial,
-      count(*) filter (where plan = 'pro')::int as pro,
+      count(*) filter (where plan in ('pro', 'agencia'))::int as pro,
       count(*) filter (where created_at > now() - interval '7 days')::int as week,
       (select count(*)::int from events where created_at > now() - interval '7 days') as events
     from users`;
   const [{ mrr }] = await sql<{ mrr: string }[]>`
     select coalesce(sum(amount), 0)::text as mrr from subscriptions where status = 'authorized'`;
-  const manualMrr = await sql<{ plan: "esencial" | "pro"; n: number }[]>`
+  const manualMrr = await sql<{ plan: PlanId; n: number }[]>`
     select plan, count(*)::int as n from users where plan_source = 'manual' group by plan`;
   const users = await sql<
     { id: string; email: string; name: string; plan: string; plan_source: string | null; trial_ends_at: Date; created_at: Date; biz: string | null; events30: number }[]
@@ -47,7 +47,7 @@ export default async function AdminPage() {
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
           ["MRR por Mercado Pago", `${formatPrice(Number(mrr))}`],
-          ["Clientes que pagan", `${paying} (${m.esencial} Esencial · ${m.pro} Pro)`],
+          ["Clientes que pagan", `${paying} (${m.esencial} Esencial · ${m.pro} Pro/Agencia)`],
           ["En prueba / vencidas", `${m.trials} / ${m.expired}`],
           ["Prueba → pago", decided ? `${Math.round((paying / decided) * 100)}%` : "—"],
           ["Cuentas totales", m.users],
@@ -113,6 +113,7 @@ export default async function AdminPage() {
                           <option value="trial">trial</option>
                           <option value="esencial">esencial</option>
                           <option value="pro">pro</option>
+                          <option value="agencia">agencia</option>
                         </select>
                         <button className="btn btn-ghost btn-sm">Fijar</button>
                       </form>

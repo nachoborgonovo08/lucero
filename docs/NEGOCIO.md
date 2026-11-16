@@ -21,6 +21,24 @@ Dato de demanda: la encuesta de consumidores de BrightLocal 2026 (EE. UU., 1.002
 
 Dato regulatorio clave: Google prohíbe el *review gating* (pedir reseñas solo a clientes contentos o desalentar las negativas) y puede borrar reseñas o restringir perfiles. Varias herramientas baratas lo hacen igual. Es la base del diferencial de Lucero.
 
+### Actualización: competidores locales que no había encontrado
+
+Una segunda búsqueda (misma fecha) mostró que **sí hay SaaS locales**, lo que corrige la fila "Reseñas (Argentina)" de la tabla:
+
+| Competidor | Qué ofrece | Precio según la búsqueda |
+| --- | --- | --- |
+| [DAME5](https://dame5.app/) (Argentina) | Cartelería NFC/QR y respuestas con IA | ARS 9.999/mes, plan único |
+| [Trustars](https://www.trustars.com.ar/) (Argentina) | Pedidos por email y WhatsApp, QR, widgets, reseñas en video, respuestas con IA | Entre USD 49 y USD 2.990 según sus datos estructurados; no pude ver el detalle por plan |
+| [StarTap](https://startap.net.ar/) | Placas NFC/QR | ARS 59.000, pago único |
+
+No encontré ningún producto llamado "Dimmi" en este rubro.
+
+**Qué cambia:**
+
+- **El precio marcador de Esencial (ARS 19.900) duplica al de DAME5.** O bajás a un rango parecido, o lo justificás con lo que DAME5 no muestra: pedidos por WhatsApp con seguimiento, QR por mesa o empleado, buzón privado y vista para agencias. Verificá en su sitio qué incluye hoy.
+- **Trustars cubre el segmento alto** (desde USD 49). El hueco está entre los dos: más completo que DAME5, mucho más barato y simple que Trustars.
+- **El plan Agencia es el diferencial más defendible**, porque ninguno de los dos aparece vendiéndose a través de agencias, y vos ya tenés una (Brote Studios).
+
 ## 2. Las tres finalistas
 
 Puntaje de 1 (malo) a 5 (bueno). Es mi criterio, no una medición.

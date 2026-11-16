@@ -17,7 +17,7 @@ export async function extendTrial(form: FormData) {
 export async function setManualPlan(form: FormData) {
   await requireAdmin();
   const id = z.string().uuid().parse(form.get("id"));
-  const plan = z.enum(["trial", "esencial", "pro"]).parse(form.get("plan"));
+  const plan = z.enum(["trial", "esencial", "pro", "agencia"]).parse(form.get("plan"));
   await sql`update users set plan = ${plan}, plan_source = ${plan === "trial" ? null : "manual"}
             where id = ${id} and (plan_source is distinct from 'mp')`;
   revalidatePath("/admin");

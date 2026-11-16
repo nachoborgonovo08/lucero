@@ -80,7 +80,7 @@ export default async function RequestsPage() {
               const text = fillTemplate(biz.whatsapp_template, { nombre: c.name, negocio: biz.name, link });
               return (
                 <li key={c.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3">
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 basis-full sm:flex-1 sm:basis-0">
                     <p className="truncate font-medium">{c.name}</p>
                     <p className="text-xs text-muted">+{c.phone}</p>
                   </div>
@@ -88,7 +88,7 @@ export default async function RequestsPage() {
                   {access && (c.status === "pending" || c.status === "sent") && (
                     <SendButton id={c.id} href={waLink(c.phone, text)} again={c.status === "sent"} />
                   )}
-                  <form action={deleteCustomer}>
+                  <form action={deleteCustomer} className="ml-auto sm:ml-0">
                     <input type="hidden" name="id" value={c.id} />
                     <button className="cursor-pointer text-xs text-muted hover:text-bad" aria-label={`Quitar a ${c.name}`}>Quitar</button>
                   </form>
